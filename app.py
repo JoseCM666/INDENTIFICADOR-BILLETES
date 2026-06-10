@@ -7,13 +7,65 @@ import cv2
 import time
 from gtts import gTTS
 import os
-
-# Configuración obligatoria al inicio para pantalla completa
+# 1. Configuración de página en modo expandido (Wide)
 st.set_page_config(
     page_title="Clasificador de Billetes",
-    layout="wide",                  # Usa el 100% del ancho de la pantalla
-    initial_sidebar_state="collapsed" # Oculta por completo el menú lateral izquierdo
+    layout="wide",
+    initial_sidebar_state="collapsed"
 )
+
+# 2. Inyección de CSS Avanzado para estirar la cámara a pantalla completa
+st.markdown("""
+    <style>
+        /* Ocultar el encabezado superior transparente de Streamlit */
+        header {
+            visibility: hidden;
+            height: 0px !important;
+        }
+        
+        /* Eliminar por completo los márgenes y rellenos de la app */
+        .main .block-container {
+            padding-top: 0rem !important;
+            padding-bottom: 0rem !important;
+            padding-left: 0rem !important;
+            padding-right: 0rem !important;
+            max-width: 100% !important;
+        }
+        
+        /* Quitar las etiquetas de texto decorativas de Streamlit dentro del componente */
+        .stCameraInput label {
+            display: none !important;
+        }
+        
+        /* Forzar al contenedor gris de la cámara a ocupar todo el ancho */
+        .stCameraInput > div {
+            width: 100% !important;
+            max-width: 100% !important;
+            background-color: transparent !important; /* Elimina el fondo gris de los lados */
+            padding: 0px !important;
+            margin: 0px !important;
+        }
+
+        /* Estirar el elemento de video (la cámara real) a pantalla completa */
+        .stCameraInput video {
+            width: 100vw !important;
+            height: 80vh !important; /* Ocupa el 80% del alto de la pantalla para dejar espacio al botón inferior */
+            object-fit: cover !important; /* Hace que la cámara llene el espacio sin deformarse */
+            border-radius: 0px !important; /* Quita los bordes redondeados */
+        }
+        
+        /* Hacer que el botón de 'Take Photo' sea más grande y nativo */
+        .stCameraInput button {
+            width: 100% !important;
+            background-color: #ff4b4b !important; /* Puedes cambiar el color del botón aquí */
+            color: white !important;
+            padding: 15px !important;
+            font-size: 18px !important;
+            font-weight: bold !important;
+            border-radius: 0px !important;
+        }
+    </style>
+""", unsafe_allow_html=True)
 # Función para generar y reproducir audio
 def reproducir_voz(texto):
     tts = gTTS(text=texto, lang='es')
