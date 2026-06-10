@@ -7,6 +7,7 @@ import cv2
 import time
 from gtts import gTTS
 import os
+
 # Configuración obligatoria al inicio para pantalla completa
 st.set_page_config(
     page_title="Clasificador de Billetes",
