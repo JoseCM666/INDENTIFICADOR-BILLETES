@@ -7,62 +7,59 @@ import cv2
 import time
 from gtts import gTTS
 import os
-# 1. Configuración de página en modo expandido (Wide)
+# Configuración inicial obligatoria
 st.set_page_config(
     page_title="Clasificador de Billetes",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
 
-# 2. Inyección de CSS Avanzado para estirar la cámara a pantalla completa
+# Inyección de CSS para forzar formato vertical de teléfono (Portrait)
 st.markdown("""
     <style>
-        /* Ocultar el encabezado superior transparente de Streamlit */
+        /* Ocultar elementos innecesarios de la interfaz web */
         header {
             visibility: hidden;
             height: 0px !important;
         }
         
-        /* Eliminar por completo los márgenes y rellenos de la app */
         .main .block-container {
-            padding-top: 0rem !important;
-            padding-bottom: 0rem !important;
-            padding-left: 0rem !important;
-            padding-right: 0rem !important;
+            padding: 0rem !important;
             max-width: 100% !important;
         }
         
-        /* Quitar las etiquetas de texto decorativas de Streamlit dentro del componente */
         .stCameraInput label {
             display: none !important;
         }
         
-        /* Forzar al contenedor gris de la cámara a ocupar todo el ancho */
+        /* Contenedor principal de la cámara */
         .stCameraInput > div {
-            width: 100% !important;
-            max-width: 100% !important;
-            background-color: transparent !important; /* Elimina el fondo gris de los lados */
+            width: 100vw !important;
+            max-width: 100vw !important;
+            background-color: #111111 !important; /* Fondo oscuro elegante de carga */
             padding: 0px !important;
             margin: 0px !important;
         }
 
-        /* Estirar el elemento de video (la cámara real) a pantalla completa */
+        /* 📱 FORZAR FORMATO VERTICAL EN EL VIDEO */
         .stCameraInput video {
-            width: 100vw !important;
-            height: 80vh !important; /* Ocupa el 80% del alto de la pantalla para dejar espacio al botón inferior */
-            object-fit: cover !important; /* Hace que la cámara llene el espacio sin deformarse */
-            border-radius: 0px !important; /* Quita los bordes redondeados */
+            width: 100vw !important;       /* Ocupa todo el ancho de la pantalla */
+            height: 75vh !important;      /* Alto controlado para que no se deforme ni tape el botón */
+            object-fit: cover !important;  /* MÁGICO: Recorta los lados y se enfoca en vertical */
+            border-radius: 0px !important;
         }
         
-        /* Hacer que el botón de 'Take Photo' sea más grande y nativo */
+        /* Botón de captura inferior adaptado al pulgar */
         .stCameraInput button {
-            width: 100% !important;
-            background-color: #ff4b4b !important; /* Puedes cambiar el color del botón aquí */
+            width: 100vw !important;
+            height: 12vh !important;      /* Más alto y fácil de presionar */
+            background-color: #00cc66 !important; /* Verde llamativo para la acción */
             color: white !important;
-            padding: 15px !important;
-            font-size: 18px !important;
+            font-size: 22px !important;   /* Letra grande y legible */
             font-weight: bold !important;
             border-radius: 0px !important;
+            border: none !important;
+            box-shadow: 0px -4px 10px rgba(0,0,0,0.3) !important; /* Sombra para separarlo del video */
         }
     </style>
 """, unsafe_allow_html=True)
