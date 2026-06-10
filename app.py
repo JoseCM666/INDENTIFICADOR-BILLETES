@@ -7,7 +7,12 @@ import cv2
 import time
 from gtts import gTTS
 import os
-
+# Configuración obligatoria al inicio para pantalla completa
+st.set_page_config(
+    page_title="Clasificador de Billetes",
+    layout="wide",                  # Usa el 100% del ancho de la pantalla
+    initial_sidebar_state="collapsed" # Oculta por completo el menú lateral izquierdo
+)
 # Función para generar y reproducir audio
 def reproducir_voz(texto):
     tts = gTTS(text=texto, lang='es')
