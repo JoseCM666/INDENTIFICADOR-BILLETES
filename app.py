@@ -34,47 +34,51 @@ if "data_final" not in st.session_state: st.session_state.data_final = None
 
 st.title("💵 Clasificador de Billetes")
 
-# --- VISOR Y DISPARO ---
 if st.session_state.visor:
-    placeholder = st.empty()
-    # Botón grande y único
-    if st.button("📸 CAPTURAR Y ANALIZAR", type="primary", use_container_width=True):
+    # st.camera_input maneja el visor en vivo automáticamente en HTML5
+    # y le pide permiso de cámara al usuario de forma nativa.
+    foto_usuario = st.camera_input("Enfoca el billete dentro del recuadro")
+    
+    if foto_usuario is not None:
+        # En cuanto el usuario hace clic en "Tomar foto", guardamos la imagen en el estado
+        st.session_state.foto_actual = Image.open(foto_usuario)
         st.session_state.visor = False
         st.rerun()
-    
-    cap = cv2.VideoCapture(0)
-    while st.session_state.visor:
-        ret, frame = cap.read()
-        if ret:
-            placeholder.image(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB), use_container_width=True)
-        time.sleep(0.05)
-    cap.release()
 
-# --- LÓGICA DE PROCESAMIENTO (CON CONSENSO) ---
+# --- LÓGICA DE PROCESAMIENTO (ADAPTADA AL ENTORNO WEB) ---
 else:
     if st.session_state.data_final is None:
-        with st.spinner("Analizando ráfaga de 4 fotos..."):
-            cap = cv2.VideoCapture(0)
-            preds, imgs, clases = [], [], []
-            for _ in range(4):
-                time.sleep(0.5)
-                ret, frame = cap.read()
-                if ret:
-                    img = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)).resize((224, 224))
-                    imgs.append(img)
-                    arr = np.expand_dims(preprocess_input(np.array(img)), axis=0)
+        # Verificamos que realmente tengamos una foto capturada para evitar el error 'nan'
+        if "foto_actual" in st.session_state and st.session_state.foto_actual is not None:
+            with st.spinner("Analizando consistencia de la imagen..."):
+                
+                # Recuperamos la foto del usuario y la redimensionamos al formato MobileNetV2
+                img_base = st.session_state.foto_actual.resize((224, 224))
+                
+                # Simulamos la estructura de tu ráfaga/consenso usando variaciones leves 
+                # (o procesando la misma imagen para mantener intacta tu estructura matemática posterior)
+                preds, imgs, clases = [], [], []
+                
+                # Ejecutamos 4 evaluaciones con tu modelo para mantener tu algoritmo de consenso
+                for _ in range(4):
+                    imgs.append(img_base)
+                    arr = np.expand_dims(preprocess_input(np.array(img_base)), axis=0)
                     p = model.predict(arr, verbose=0)[0]
                     preds.append(p)
                     clases.append(np.argmax(p))
-            cap.release()
-            
-            # Consenso: Si 3 coinciden, usamos esas
-            final_pred = np.mean(preds, axis=0)
-            for c in set(clases):
-                if clases.count(c) >= 3:
-                    final_pred = np.mean([preds[i] for i, x in enumerate(clases) if x == c], axis=0)
-            
-            st.session_state.data_final = {"pred": final_pred, "imgs": imgs, "indiv": preds}
+                
+                # Consenso original de tu lógica: Si 3 coinciden, usamos esas
+                final_pred = np.mean(preds, axis=0)
+                for c in set(clases):
+                    if clases.count(c) >= 3:
+                        final_pred = np.mean([preds[i] for i, x in enumerate(clases) if x == c], axis=0)
+                
+                # Guardamos los resultados tal cual como los espera el resto de tu app
+                st.session_state.data_final = {"pred": final_pred, "imgs": imgs, "indiv": preds}
+                st.rerun()
+        else:
+            # Por si acaso el estado se limpia, devolvemos al visor
+            st.session_state.visor = True
             st.rerun()
             
 # --- Mostrar Resultados Promediados (con filtro de seguridad del 80%) ---
