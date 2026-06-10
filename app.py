@@ -37,7 +37,7 @@ st.title("💵 Clasificador de Billetes")
 if st.session_state.visor:
     # st.camera_input maneja el visor en vivo automáticamente en HTML5
     # y le pide permiso de cámara al usuario de forma nativa.
-    foto_usuario = st.camera_input("Enfoca el billete dentro del recuadro", facing_mode="environment")
+    foto_usuario = st.camera_input("Enfoca el billete dentro del recuadro")
     
     if foto_usuario is not None:
         # En cuanto el usuario hace clic en "Tomar foto", guardamos la imagen en el estado
