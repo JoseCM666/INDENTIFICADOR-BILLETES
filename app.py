@@ -14,69 +14,83 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# CSS para expandir la cámara de arriba a abajo al 100%
+# Ocultar márgenes internos y el encabezado por defecto de Streamlit
 st.markdown("""
-    <style>
-        /* 1. ELIMINAR INTERFAZ WEB Y HEADER */
-        header {
-            visibility: hidden;
-            height: 0px !important;
-        }
-        
-        /* Forzar al contenedor principal a no tener márgenes ni barras de scroll */
-        .main, .block-container {
-            padding: 0rem !important;
-            margin: 0rem !important;
-            max-width: 100% !important;
-            height: 100vh !important;
-            overflow: hidden !important;
-        }
-        
-        /* Ocultar etiquetas de texto automáticas */
-        .stCameraInput label {
-            display: none !important;
-        }
-        
-        /* 2. ESTIRAR EL CONTENEDOR DE LA CÁMARA AL MÁXIMO */
-        .stCameraInput > div {
-            width: 100vw !important;
-            max-width: 100vw !important;
-            height: 100vh !important;
-            padding: 0px !important;
-            margin: 0px !important;
-            background-color: #000000 !important;
-        }
+<style>
+    /* Ocultar el encabezado superior y la barra de navegación lateral */
+    #root > div:nth-child(1) {
+        display: none;
+    }
+    .css-18ni7ap { /* Ocultar el menú de 'Streamlit' en la parte superior derecha */
+        display: none;
+    }
+    
+    /* Forzar el contenedor principal a ocupar todo el ancho y alto */
+    .css-1v3fvcr {
+        max-width: 100vw;
+        max-height: 100vh;
+        margin: 0px;
+        padding: 0px;
+        overflow: hidden; /* Evitar barras de desplazamiento */
+    }
 
-        /* 3. VISTA DE CÁMARA DESDE ARRIBA HASTA ABAJO (100% PANTALLA) */
-        .stCameraInput video {
-            width: 100vw !important;
-            height: 100vh !important;       /* Ocupa el 100% del alto del teléfono */
-            object-fit: cover !important;    /* Recorta los lados y llena la pantalla vertical */
-            border-radius: 0px !important;
-            position: absolute !important;
-            top: 0 !important;
-            left: 0 !important;
-            z-index: 1 !important;           /* Capa de fondo */
-        }
+    /* Modificar el contenedor de la cámara para que ocupe todo el espacio */
+    .stCameraInput {
+        max-width: 100%;
+        max-height: 100%;
+    }
+
+    /* ESTILO PARA EL BOTÓN 'TAKE PHOTO' (Verde y Flotante en la parte inferior) */
+    .stButton > button {
+        background-color: #2e8b57 !important; /* Verde bosque profundo, como en la referencia */
+        color: black !important;
+        border: none;
+        padding: 15px 30px;
+        font-size: 24px;
+        font-family: 'Comic Sans MS', cursive, sans-serif; /* Aproximar el estilo manuscrito */
+        border-radius: 20px; /* Bordes redondeados */
         
-        /* 4. BOTÓN DE CAPTURA FLOTANTE EN LA PARTE INFERIOR */
-        .stCameraInput button {
-            position: absolute !important;
-            bottom: 0px !important;          /* Pegado completamente abajo */
-            left: 0px !important;
-            width: 100vw !important;
-            height: 12vh !important;         /* Alto cómodo para el pulgar */
-            background-color: rgba(0, 204, 102, 0.85) !important; /* Verde semitransparente elegante */
-            color: white !important;
-            font-size: 24px !important;    
-            font-weight: bold !important;
-            border-radius: 0px !important;
-            border: none !important;
-            z-index: 10 !important;          /* Se dibuja por ENCIMA del video */
-            backdrop-filter: blur(5px) !important; /* Efecto difuminado moderno detrás del botón */
-        }
-    </style>
+        /* Posicionamiento flotante en la parte inferior */
+        position: fixed;
+        bottom: 20px; /* Ajustar distancia desde abajo */
+        left: 50%;
+        transform: translateX(-50%); /* Centrar horizontalmente */
+        z-index: 1000; /* Asegurar que esté por encima de la cámara */
+    }
+
+    /* ESTILO PARA EL MENÚ (Verde y Flotante en la parte superior derecha) */
+    .stButton > button[id^='menu_'] { /* Ajustar el ID si tienes un botón de menú específico */
+        background-color: #2e8b57 !important;
+        padding: 10px;
+        border-radius: 10px;
+        
+        /* Posicionamiento flotante en la parte superior derecha */
+        position: fixed;
+        top: 10px; /* Ajustar distancia desde arriba */
+        right: 10px; /* Ajustar distancia desde la derecha */
+        z-index: 1001; /* Asegurar que esté por encima de la cámara */
+    }
+
+    /* Ajuste para que la cámara no se vea cortada al estirarse */
+    .css-1y4p850 img {
+        object-fit: cover;
+    }
+
+</style>
 """, unsafe_allow_html=True)
+
+# Ejemplo de estructura de código para los botones y la cámara
+# (Asegúrate de que tus elementos tengan IDs claros para el CSS)
+col_menu = st.columns([0.9, 0.1])
+with col_menu[1]:
+    # Crear un botón de menú con un ID predecible para el CSS
+    st.button("", key="menu_top")
+
+# Cargar la entrada de la cámara
+st.camera_input("Smile!")
+
+# Crear el botón de captura
+st.button("Take Photo")
 # Función para generar y reproducir audio
 def reproducir_voz(texto):
     tts = gTTS(text=texto, lang='es')
