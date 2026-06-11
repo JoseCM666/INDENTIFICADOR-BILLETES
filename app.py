@@ -15,7 +15,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# 2. MOTOR CSS CORREGIDO (Evita colapso de pantalla negra)
+# 2. MOTOR CSS CORREGIDO (Evita colapso de pantalla negra y añade estilos de botones)
 st.markdown("""
     <style>
         /* Desactivar elementos globales de la interfaz web */
@@ -50,25 +50,45 @@ st.markdown("""
         .stCameraInput video {
             width: 100vw !important;
             height: 100vh !important;
-            object-fit: cover !important; /* Mantiene el llenado recortando bordes horizontales de PC */
+            object-fit: cover !important; 
             border-radius: 0px !important;
         }
         
-        /* BOTÓN DE CAPTURA FLOTANTE (Posicionado sobre el video en la parte inferior) */
+        /* BOTÓN DE CAPTURA FLOTANTE (Take Photo) */
         .stCameraInput button {
             position: fixed !important;
             bottom: 20px !important;
             left: 5% !important;
-            width: 90vw !important; /* Deja un pequeño margen elegante a los lados */
+            width: 90vw !important; 
             height: 70px !important;
             background-color: #00cc66 !important; /* Verde nativo intenso */
             color: white !important;
             font-size: 24px !important;
             font-weight: bold !important;
-            border-radius: 16px !important; /* Bordes redondeados de app moderna */
+            border-radius: 16px !important; 
             border: none !important;
-            z-index: 9999 !important; /* Prioridad de capa absoluta */
+            z-index: 9998 !important; /* Capa inferior al botón de voltear */
             box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.4) !important;
+        }
+
+        /* 🔄 BOTÓN INYECTADO: Activar Cámara Trasera (Justo encima de Take Photo) */
+        .btn-voltear-fijo {
+            position: fixed !important;
+            bottom: 105px !important; /* Posicionado perfectamente arriba del otro */
+            left: 5% !important;
+            width: 90vw !important;
+            height: 65px !important;
+            background-color: #1e5631 !important; /* Verde oscuro elegante */
+            color: white !important;
+            font-size: 20px !important;
+            font-weight: bold !important;
+            border-radius: 16px !important;
+            border: none !important;
+            z-index: 9999 !important; /* Capa superior absoluta para evitar bloqueos */
+            box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.4) !important;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
     </style>
 """, unsafe_allow_html=True)
@@ -96,6 +116,30 @@ if "data_final" not in st.session_state: st.session_state.data_final = None
 
 # --- MÓDULO DE LA CÁMARA (VISOR ACTIVO) ---
 if st.session_state.visor:
+    
+    # Inyección del botón HTML + Script de automatización
+    st.markdown("""
+        <button class="btn-voltear-fijo" onclick="voltearCamara()">
+            🔄 Activar Cámara Trasera
+        </button>
+        
+        <script>
+            function voltearCamara() {
+                // Busca todos los elementos tipo botón en la interfaz
+                const botones = document.querySelectorAll('button');
+                for (let btn of botones) {
+                    // Si el botón pertenece al módulo de cámara y contiene un SVG (el icono nativo de rotar)
+                    if (btn.outerHTML.includes('stCameraInput') && btn.innerHTML.includes('svg')) {
+                        btn.click(); // Ejecuta el clic de hardware
+                        break;
+                    }
+                }
+                // Oculta el botón inmediatamente para limpiar la pantalla
+                document.querySelector('.btn-voltear-fijo').style.display = 'none';
+            }
+        </script>
+    """, unsafe_allow_html=True)
+
     # Captura nativa de Streamlit
     foto_usuario = st.camera_input("Enfoca el billete")
     
