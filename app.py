@@ -15,7 +15,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# 2. MOTOR CSS CORREGIDO (Evita colapso de pantalla negra y añade estilos de botones)
+# 2. MOTOR CSS CORREGIDO (Evita colapso de pantalla negra y da estilo a los dos botones)
 st.markdown("""
     <style>
         /* Desactivar elementos globales de la interfaz web */
@@ -54,41 +54,38 @@ st.markdown("""
             border-radius: 0px !important;
         }
         
-        /* BOTÓN DE CAPTURA FLOTANTE (Take Photo) */
+        /* BOTÓN DE CAPTURA FLOTANTE (Posicionado sobre el video en la parte inferior) */
         .stCameraInput button {
             position: fixed !important;
             bottom: 20px !important;
             left: 5% !important;
             width: 90vw !important; 
             height: 70px !important;
-            background-color: #00cc66 !important; /* Verde nativo intenso */
+            background-color: #00cc66 !important; 
             color: white !important;
             font-size: 24px !important;
             font-weight: bold !important;
             border-radius: 16px !important; 
             border: none !important;
-            z-index: 9998 !important; /* Capa inferior al botón de voltear */
+            z-index: 9998 !important; 
             box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.4) !important;
         }
 
-        /* 🔄 BOTÓN INYECTADO: Activar Cámara Trasera (Justo encima de Take Photo) */
-        .btn-voltear-fijo {
+        /* 🔄 ESTILO PARA EL BOTÓN DE VOLTEAR CÁMARA (Ubicado justo arriba de Take Photo) */
+        .div-voltear button {
             position: fixed !important;
-            bottom: 105px !important; /* Posicionado perfectamente arriba del otro */
+            bottom: 105px !important; 
             left: 5% !important;
             width: 90vw !important;
-            height: 65px !important;
-            background-color: #1e5631 !important; /* Verde oscuro elegante */
+            height: 60px !important;
+            background-color: #1e5631 !important; /* Verde oscuro */
             color: white !important;
             font-size: 20px !important;
             font-weight: bold !important;
             border-radius: 16px !important;
             border: none !important;
-            z-index: 9999 !important; /* Capa superior absoluta para evitar bloqueos */
+            z-index: 9999 !important; 
             box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.4) !important;
-            display: flex;
-            align-items: center;
-            justify-content: center;
         }
     </style>
 """, unsafe_allow_html=True)
@@ -110,38 +107,28 @@ def load_my_model():
 model = load_my_model()
 CLASSES = ["Fondo", "1 Dólar", "10 Dólares", "100 Dólares", "2 Dólares", "5 Dólares", "50 Dólares"]
 
-# Control de estados
+# Control de estados e inicialización del interruptor de lente
 if "visor" not in st.session_state: st.session_state.visor = True
 if "data_final" not in st.session_state: st.session_state.data_final = None
+if "lente_trasero" not in st.session_state: st.session_state.lente_trasero = False
 
 # --- MÓDULO DE LA CÁMARA (VISOR ACTIVO) ---
 if st.session_state.visor:
     
-    # Inyección del botón HTML + Script de automatización
-    st.markdown("""
-        <button class="btn-voltear-fijo" onclick="voltearCamara()">
-            🔄 Activar Cámara Trasera
-        </button>
-        
-        <script>
-            function voltearCamara() {
-                // Busca todos los elementos tipo botón en la interfaz
-                const botones = document.querySelectorAll('button');
-                for (let btn of botones) {
-                    // Si el botón pertenece al módulo de cámara y contiene un SVG (el icono nativo de rotar)
-                    if (btn.outerHTML.includes('stCameraInput') && btn.innerHTML.includes('svg')) {
-                        btn.click(); // Ejecuta el clic de hardware
-                        break;
-                    }
-                }
-                // Oculta el botón inmediatamente para limpiar la pantalla
-                document.querySelector('.btn-voltear-fijo').style.display = 'none';
-            }
-        </script>
-    """, unsafe_allow_html=True)
+    # Renderizamos el botón para alternar de cámara
+    st.markdown('<div class="div-voltear">', unsafe_allow_html=True)
+    texto_boton = "🔄 Usar Cámara Delantera" if st.session_state.lente_trasero else "🔄 Usar Cámara Trasera"
+    if st.button(texto_boton, key="btn_toggle_hardware"):
+        # Alternamos el estado booleano
+        st.session_state.lente_trasero = not st.session_state.lente_trasero
+        st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
 
-    # Captura nativa de Streamlit
-    foto_usuario = st.camera_input("Enfoca el billete")
+    # El truco: Si 'lente_trasero' cambia, la key cambia ("lente_b"), destruyendo y recreando el componente
+    clave_dinamica = "lente_b" if st.session_state.lente_trasero else "lente_a"
+    
+    # Captura nativa de Streamlit con llave dinámica
+    foto_usuario = st.camera_input("Enfoca el billete", key=clave_dinamica)
     
     if foto_usuario is not None:
         st.session_state.foto_actual = Image.open(foto_usuario)
@@ -198,6 +185,7 @@ else:
                     confianza_ind = np.max(preds_indiv[i]) * 100
                     clase_ind = CLASSES[np.argmax(preds_indiv[i])]
                     with cols[i]:
+                        # Corregido: Agregamos la sangría/indentación obligatoria dentro del bloque context
                         st.image(img, use_container_width=True)
                         st.caption(f"**{clase_ind}** ({confianza_ind:.1f}%)")
     else:
