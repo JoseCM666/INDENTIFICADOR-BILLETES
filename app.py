@@ -7,59 +7,73 @@ import cv2
 import time
 from gtts import gTTS
 import os
-# Configuración inicial obligatoria
+# Configuración inicial fija (Modo Ancho obligatorio)
 st.set_page_config(
     page_title="Clasificador de Billetes",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
 
-# Inyección de CSS para forzar formato vertical de teléfono (Portrait)
+# CSS para expandir la cámara de arriba a abajo al 100%
 st.markdown("""
     <style>
-        /* Ocultar elementos innecesarios de la interfaz web */
+        /* 1. ELIMINAR INTERFAZ WEB Y HEADER */
         header {
             visibility: hidden;
             height: 0px !important;
         }
         
-        .main .block-container {
+        /* Forzar al contenedor principal a no tener márgenes ni barras de scroll */
+        .main, .block-container {
             padding: 0rem !important;
+            margin: 0rem !important;
             max-width: 100% !important;
+            height: 100vh !important;
+            overflow: hidden !important;
         }
         
+        /* Ocultar etiquetas de texto automáticas */
         .stCameraInput label {
             display: none !important;
         }
         
-        /* Contenedor principal de la cámara */
+        /* 2. ESTIRAR EL CONTENEDOR DE LA CÁMARA AL MÁXIMO */
         .stCameraInput > div {
             width: 100vw !important;
             max-width: 100vw !important;
-            background-color: #111111 !important; /* Fondo oscuro elegante de carga */
+            height: 100vh !important;
             padding: 0px !important;
             margin: 0px !important;
+            background-color: #000000 !important;
         }
 
-        /* 📱 FORZAR FORMATO VERTICAL EN EL VIDEO */
+        /* 3. VISTA DE CÁMARA DESDE ARRIBA HASTA ABAJO (100% PANTALLA) */
         .stCameraInput video {
-            width: 100vw !important;       /* Ocupa todo el ancho de la pantalla */
-            height: 75vh !important;      /* Alto controlado para que no se deforme ni tape el botón */
-            object-fit: cover !important;  /* MÁGICO: Recorta los lados y se enfoca en vertical */
+            width: 100vw !important;
+            height: 100vh !important;       /* Ocupa el 100% del alto del teléfono */
+            object-fit: cover !important;    /* Recorta los lados y llena la pantalla vertical */
             border-radius: 0px !important;
+            position: absolute !important;
+            top: 0 !important;
+            left: 0 !important;
+            z-index: 1 !important;           /* Capa de fondo */
         }
         
-        /* Botón de captura inferior adaptado al pulgar */
+        /* 4. BOTÓN DE CAPTURA FLOTANTE EN LA PARTE INFERIOR */
         .stCameraInput button {
+            position: absolute !important;
+            bottom: 0px !important;          /* Pegado completamente abajo */
+            left: 0px !important;
             width: 100vw !important;
-            height: 12vh !important;      /* Más alto y fácil de presionar */
-            background-color: #00cc66 !important; /* Verde llamativo para la acción */
+            height: 12vh !important;         /* Alto cómodo para el pulgar */
+            background-color: rgba(0, 204, 102, 0.85) !important; /* Verde semitransparente elegante */
             color: white !important;
-            font-size: 22px !important;   /* Letra grande y legible */
+            font-size: 24px !important;    
             font-weight: bold !important;
             border-radius: 0px !important;
             border: none !important;
-            box-shadow: 0px -4px 10px rgba(0,0,0,0.3) !important; /* Sombra para separarlo del video */
+            z-index: 10 !important;          /* Se dibuja por ENCIMA del video */
+            backdrop-filter: blur(5px) !important; /* Efecto difuminado moderno detrás del botón */
         }
     </style>
 """, unsafe_allow_html=True)
