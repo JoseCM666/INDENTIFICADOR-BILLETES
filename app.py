@@ -15,79 +15,60 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# 2. CSS LIMPIO: Evita colapsos y asegura el flujo de la cámara
+# 2. MOTOR CSS CORREGIDO (Evita colapso de pantalla negra)
 st.markdown("""
     <style>
-        /* Ocultar interfaces web sobrantes */
-        header, [data-testid="stHeader"], #root > div:nth-child(1) {
+        /* Desactivar elementos globales de la interfaz web */
+        header, [data-testid="stHeader"] {
             visibility: hidden;
             height: 0px !important;
-            display: none !important;
         }
         
-        /* Contenedor principal expandido sin restricciones */
-        .main, .block-container {
+        /* Limpiar márgenes del contenedor principal de la aplicación */
+        .main .block-container {
             padding: 0rem !important;
             margin: 0rem !important;
             max-width: 100% !important;
             min-height: 100vh !important;
         }
         
+        /* Ocultar etiquetas de texto nativas de Streamlit */
         .stCameraInput label {
             display: none !important;
         }
         
-        /* Forzar al área de la cámara a ocupar la pantalla */
+        /* CONTENEDOR DE LA CÁMARA: Forzar estiramiento responsivo */
         .stCameraInput, .stCameraInput > div {
             width: 100vw !important;
-            height: 100vh !important;
+            max-width: 100vw !important;
+            min-height: 100vh !important;
             margin: 0px !important;
             padding: 0px !important;
         }
 
+        /* CORRECCIÓN DE PANTALLA NEGRA: Ajustar el elemento de video nativo */
         .stCameraInput video {
             width: 100vw !important;
             height: 100vh !important;
-            object-fit: cover !important;
+            object-fit: cover !important; /* Mantiene el llenado recortando bordes horizontales de PC */
             border-radius: 0px !important;
-            transform: scaleX(1) !important; 
         }
         
-        /* BOTÓN NATIVO (Take Photo): Fijado en la base */
+        /* BOTÓN DE CAPTURA FLOTANTE (Posicionado sobre el video en la parte inferior) */
         .stCameraInput button {
             position: fixed !important;
             bottom: 20px !important;
             left: 5% !important;
-            width: 90vw !important; 
+            width: 90vw !important; /* Deja un pequeño margen elegante a los lados */
             height: 70px !important;
-            background-color: #00cc66 !important; 
+            background-color: #00cc66 !important; /* Verde nativo intenso */
             color: white !important;
             font-size: 24px !important;
             font-weight: bold !important;
-            border-radius: 16px !important; 
+            border-radius: 16px !important; /* Bordes redondeados de app moderna */
             border: none !important;
-            z-index: 999 !important; 
+            z-index: 9999 !important; /* Prioridad de capa absoluta */
             box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.4) !important;
-        }
-
-        /* 🔄 BOTÓN HTML FLOTANTE: Activar Cámara Trasera (Justo arriba de Take Photo) */
-        .btn-voltear-fijo {
-            position: fixed !important;
-            bottom: 105px !important;
-            left: 5% !important;
-            width: 90vw !important;
-            height: 65px !important;
-            background-color: #2e8b57 !important;
-            color: white !important;
-            font-size: 20px !important;
-            font-weight: bold !important;
-            border-radius: 16px !important;
-            border: none !important;
-            z-index: 9999 !important;
-            box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.4) !important;
-            display: flex;
-            align-items: center;
-            justify-content: center;
         }
     </style>
 """, unsafe_allow_html=True)
@@ -115,31 +96,7 @@ if "data_final" not in st.session_state: st.session_state.data_final = None
 
 # --- MÓDULO DE LA CÁMARA (VISOR ACTIVO) ---
 if st.session_state.visor:
-    
-    # Inyección del botón HTML + JavaScript para forzar el cambio de cámara sin romper Streamlit
-    st.markdown("""
-        <button class="btn-voltear-fijo" onclick="voltearCamara()">
-            🔄 Activar Cámara Trasera
-        </button>
-        
-        <script>
-            function voltearCamara() {
-                // Busca el botón nativo que Streamlit genera para alternar cámaras
-                const botones = document.querySelectorAll('button');
-                for (let btn of botones) {
-                    // Si el botón contiene el icono o texto de cambio de cámara, le da clic de inmediato
-                    if (btn.innerHTML.includes('svg') && btn.outerHTML.includes('stCameraInput')) {
-                        btn.click();
-                        break;
-                    }
-                }
-                // Oculta este botón una vez presionado para dejar libre el de captura
-                document.querySelector('.btn-voltear-fijo').style.display = 'none';
-            }
-        </script>
-    """, unsafe_allow_html=True)
-
-    # Visor limpio
+    # Captura nativa de Streamlit
     foto_usuario = st.camera_input("Enfoca el billete")
     
     if foto_usuario is not None:
@@ -155,6 +112,7 @@ else:
                 img_base = st.session_state.foto_actual.resize((224, 224))
                 preds, imgs, clases = [], [], []
                 
+                # Evaluación por consenso (4 réplicas)
                 for _ in range(4):
                     imgs.append(img_base)
                     arr = np.expand_dims(preprocess_input(np.array(img_base)), axis=0)
@@ -196,3 +154,13 @@ else:
                     confianza_ind = np.max(preds_indiv[i]) * 100
                     clase_ind = CLASSES[np.argmax(preds_indiv[i])]
                     with cols[i]:
+                        st.image(img, use_container_width=True)
+                        st.caption(f"**{clase_ind}** ({confianza_ind:.1f}%)")
+    else:
+        st.error("⚠️ **Índice de confianza bajo**")
+        st.warning(f"La certeza actual es de solo **{confianza:.2f}%**. Intenta de nuevo.")
+        
+    if st.button("🔄 Nueva Captura", use_container_width=True):
+        st.session_state.visor = True
+        st.session_state.data_final = None
+        st.rerun()
