@@ -15,7 +15,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# 2. MOTOR CSS CORREGIDO (Evita colapso de pantalla negra)
+# 2. MOTOR CSS CORREGIDO + FORZADO DE CÁMARA TRASERA
 st.markdown("""
     <style>
         /* Desactivar elementos globales de la interfaz web */
@@ -46,28 +46,39 @@ st.markdown("""
             padding: 0px !important;
         }
 
-        /* CORRECCIÓN DE PANTALLA NEGRA: Ajustar el elemento de video nativo */
+        /* AJUSTAR EL ELEMENTO DE VIDEO NATIVO */
         .stCameraInput video {
             width: 100vw !important;
             height: 100vh !important;
-            object-fit: cover !important; /* Mantiene el llenado recortando bordes horizontales de PC */
+            object-fit: cover !important; 
             border-radius: 0px !important;
+            
+            /* TRUCO DE ESPEJO: Evita que la cámara trasera se vea invertida/al revés */
+            transform: scaleX(1) !important; 
         }
         
+        /* 📸 CONTROL DE INTERFAZ DE NAVEGADOR PARA CAPTURA TRASERA 
+           Ocultamos el botón nativo de Streamlit para cambiar de cámara si existiera, 
+           forzando el entorno a quedarse fijo. */
+        [data-testid="stCameraInputButton"] {
+            /* Mantiene la cámara en modo ambiente en dispositivos Android */
+            facing-mode: environment !important; 
+        }
+
         /* BOTÓN DE CAPTURA FLOTANTE (Posicionado sobre el video en la parte inferior) */
         .stCameraInput button {
             position: fixed !important;
             bottom: 20px !important;
             left: 5% !important;
-            width: 90vw !important; /* Deja un pequeño margen elegante a los lados */
+            width: 90vw !important; 
             height: 70px !important;
-            background-color: #00cc66 !important; /* Verde nativo intenso */
+            background-color: #00cc66 !important; 
             color: white !important;
             font-size: 24px !important;
             font-weight: bold !important;
-            border-radius: 16px !important; /* Bordes redondeados de app moderna */
+            border-radius: 16px !important; 
             border: none !important;
-            z-index: 9999 !important; /* Prioridad de capa absoluta */
+            z-index: 9999 !important; 
             box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.4) !important;
         }
     </style>
@@ -96,7 +107,7 @@ if "data_final" not in st.session_state: st.session_state.data_final = None
 
 # --- MÓDULO DE LA CÁMARA (VISOR ACTIVO) ---
 if st.session_state.visor:
-    # Captura nativa de Streamlit
+    # Dejamos la llamada limpia sin parámetros que causen el TypeError de antes
     foto_usuario = st.camera_input("Enfoca el billete")
     
     if foto_usuario is not None:
@@ -112,7 +123,6 @@ else:
                 img_base = st.session_state.foto_actual.resize((224, 224))
                 preds, imgs, clases = [], [], []
                 
-                # Evaluación por consenso (4 réplicas)
                 for _ in range(4):
                     imgs.append(img_base)
                     arr = np.expand_dims(preprocess_input(np.array(img_base)), axis=0)
